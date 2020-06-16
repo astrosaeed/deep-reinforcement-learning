@@ -17,6 +17,14 @@ class QNetwork(nn.Module):
         self.seed = torch.manual_seed(seed)
         "*** YOUR CODE HERE ***"
 
+        self.fc1 = nn.Linear(state_size,32)
+        self.fc2 = nn.Linear(32,action_size)
+        self.softmax =nn.Softmax(dim=1)
     def forward(self, state):
         """Build a network that maps state -> action values."""
-        pass
+        out = self.fc1(state)
+        out = F.relu(out)
+        out = self.fc2(out)
+        out = self.softmax(out)
+        
+        return out

@@ -5,6 +5,7 @@ from collections import namedtuple, deque
 from model import QNetwork
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
@@ -14,6 +15,9 @@ GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
 LR = 5e-4               # learning rate 
 UPDATE_EVERY = 4        # how often to update the network
+
+criterion = nn.MSELoss() 
+
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -84,10 +88,24 @@ class Agent():
             gamma (float): discount factor
         """
         states, actions, rewards, next_states, dones = experiences
+        
+        ys= []
 
         ## TODO: compute and minimize the loss
         "*** YOUR CODE HERE ***"
+        loss = 0
+        for i in range(50):
+            
+            ys= rewards+(1-dones)*GAMMA*torch.max(self.qnetwork_target(next_states))
+            self.optimizer.zero_grad()
+            #print ('ys')
+            #print (ys.shape)
+            #print (torch.max(self.qnetwork_target(states),1)[0].unsqueeze(1).size())
+            loss+= criterion(ys, torch.max(self.qnetwork_target(states),1)[0].unsqueeze(1))
+            loss.backward        # Calculate the gradients 
 
+            self.optimizer.step()     # update weights 
+            
         # ------------------- update target network ------------------- #
         self.soft_update(self.qnetwork_local, self.qnetwork_target, TAU)                     
 
