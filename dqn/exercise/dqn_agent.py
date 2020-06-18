@@ -16,7 +16,7 @@ TAU = 1e-3              # for soft update of target parameters
 LR = 5e-4               # learning rate 
 UPDATE_EVERY = 4        # how often to update the network
 
-criterion = nn.MSELoss() 
+
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -89,23 +89,32 @@ class Agent():
         """
         states, actions, rewards, next_states, dones = experiences
         
-        ys= []
+        
 
         ## TODO: compute and minimize the loss
         "*** YOUR CODE HERE ***"
-        loss = 0
-        for i in range(50):
-            
-            ys= rewards+(1-dones)*GAMMA*torch.max(self.qnetwork_target(next_states))
-            self.optimizer.zero_grad()
-            #print ('ys')
-            #print (ys.shape)
-            #print (torch.max(self.qnetwork_target(states),1)[0].unsqueeze(1).size())
-            loss+= criterion(ys, torch.max(self.qnetwork_target(states),1)[0].unsqueeze(1))
-            loss.backward        # Calculate the gradients 
+        #print (dones.shape)
+        Q_targets_next = self.qnetwork_target(next_states).detach().max(1)[0].unsqueeze(1)
+        #print (Q_targets_next.shape)
+        targ_val= rewards+GAMMA*Q_targets_next*(1-dones)        
+        current_val = self.qnetwork_local(states).gather(1,actions)
+        #print ('targ_val')
+        #print (targ_val.shape)
+        #print (current_val.shape)
+        #print (torch.max(self.qnetwork_target(states),1)[0].unsqueeze(1).size())
+        '''
+        My mistakes:
+        1- putting epoch loop, not needed
+        2- calculating max of q_local, which is wrong. We find q_local value of action sampled from buffer
+        
+        '''
+        loss = F.mse_loss(current_val, targ_val)
+        self.optimizer.zero_grad()
+       
+        loss.backward        # Calculate the gradients 
 
-            self.optimizer.step()     # update weights 
-            
+        self.optimizer.step()     # update weights 
+
         # ------------------- update target network ------------------- #
         self.soft_update(self.qnetwork_local, self.qnetwork_target, TAU)                     
 
