@@ -111,7 +111,7 @@ class Agent():
         loss = F.mse_loss(current_val, targ_val)
         self.optimizer.zero_grad()
        
-        loss.backward        # Calculate the gradients 
+        loss.backward()        # Calculate the gradients 
 
         self.optimizer.step()     # update weights 
 
